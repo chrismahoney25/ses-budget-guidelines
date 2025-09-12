@@ -1,103 +1,305 @@
-import Image from "next/image";
+"use client";
+
+import { useMemo, useState } from "react";
+import { Field, Input, Tabs, Select } from "./components/UI";
+import { AppHeader } from "./components/AppHeader";
+import { buildFromIncomeInputs, buildFromRent, getPeriodFactor, scaleBudget, type Period } from "@/lib/calc";
+import type { BudgetData } from "@/lib/types";
+import raw from "./data.json";
+
+const data = raw as unknown as BudgetData;
+
+type PeriodKey = "weekly" | "monthly" | "annual";
+const PERIODS: PeriodKey[] = ["weekly", "monthly", "annual"];
 
 export default function Home() {
-  return (
-    <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-              app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+  const [mode, setMode] = useState<"income" | "rent">("income");
+  const [services, setServices] = useState(0);
+  const [tips, setTips] = useState(0);
+  const [retail, setRetail] = useState(0);
+  const [rent, setRent] = useState(0);
+  const [mobilePeriod, setMobilePeriod] = useState<Period>("weekly");
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
+  const { weekly, monthly, annual } = useMemo(() => {
+    const base = mode === "income" ? buildFromIncomeInputs(data, { services, tips, retail }) : buildFromRent(data, rent);
+    return {
+      weekly: scaleBudget(base, getPeriodFactor("weekly")),
+      monthly: scaleBudget(base, getPeriodFactor("monthly")),
+      annual: scaleBudget(base, getPeriodFactor("annual")),
+    };
+  }, [mode, services, tips, retail, rent]);
+
+  const periodResults = { weekly, monthly, annual } as const;
+
+  function lineNames(category: "incomeLines" | "directExpenses" | "indirectExpenses") {
+    return weekly[category].map((l) => l.name);
+  }
+
+  function getAmount(period: PeriodKey, category: "incomeLines" | "directExpenses" | "indirectExpenses", name: string) {
+    const line = periodResults[period][category].find((l) => l.name === name);
+    return line ? line.amount : 0;
+  }
+
+  function getPercent(period: PeriodKey, category: "incomeLines" | "directExpenses" | "indirectExpenses", name: string) {
+    const line = periodResults[period][category].find((l) => l.name === name);
+    return line ? (line.percent * 100) : 0;
+  }
+
+  function formatPercentOneDecimal(n: number) {
+    return `${n.toFixed(1)}%`;
+  }
+
+  function formatCurrency(n: number) {
+    return `$${n.toLocaleString()}`;
+  }
+
+  return (
+    <div className="min-h-screen">
+      <AppHeader />
+      <div className="pt-16 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+        {/* Inputs card with mode toggle inside */}
+        <div className="rounded-2xl border border-slate-200/60 bg-white shadow p-5">
+          <div className="flex items-center justify-between mb-6">
+            <h3 className="text-lg font-semibold">Inputs</h3>
+            <Tabs
+              value={mode}
+              onChange={(v) => setMode(v as "income" | "rent")}
+              options={[
+                { value: "income", label: "By Income" },
+                { value: "rent", label: "By Rent" },
+              ]}
             />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+          </div>
+
+          {mode === "income" ? (
+            <div className="grid sm:grid-cols-3 gap-4">
+              <Field label="Services (weekly)">
+                <Input prefix="$" value={services} onChange={setServices} />
+              </Field>
+              <Field label="Tips (weekly)">
+                <Input prefix="$" value={tips} onChange={setTips} />
+              </Field>
+              <Field label="Retail (weekly)">
+                <Input prefix="$" value={retail} onChange={setRetail} />
+              </Field>
+            </div>
+          ) : (
+            <div className="grid sm:grid-cols-2 gap-4">
+              <Field label="Rent (weekly)">
+                <Input prefix="$" value={rent} onChange={setRent} />
+              </Field>
+            </div>
+          )}
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+
+        {/* Budget Breakdown */}
+        <div className="mt-6 rounded-2xl border border-slate-200/60 bg-white shadow">
+          {/* Header with title and mobile dropdown right-aligned */}
+          <div className="px-5 py-4 border-b border-slate-200/60 flex items-center justify-between">
+            <h3 className="text-lg font-semibold">Budget</h3>
+            <div className="lg:hidden">
+              <Select
+                className="h-9 px-3 py-1.5 text-sm rounded-lg border-slate-200"
+                value={mobilePeriod}
+                onChange={(v) => setMobilePeriod(v as Period)}
+                options={[
+                  { value: "weekly", label: "Weekly" },
+                  { value: "monthly", label: "Monthly" },
+                  { value: "annual", label: "Annual" },
+                ]}
+              />
+            </div>
+          </div>
+
+          {/* Desktop table */}
+          <div className="hidden lg:block">
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead className="bg-[var(--color-teal-50)] text-sm">
+                  <tr>
+                    <th className="text-left px-5 py-3 font-medium text-slate-700">Category</th>
+                    <th className="text-right px-5 py-3 font-medium text-slate-700">% of income</th>
+                    {PERIODS.map((p) => (
+                      <th key={p} className="text-right px-5 py-3 font-medium text-slate-700 capitalize">{p}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody className="text-sm">
+                  {/* Income Section */}
+                  <tr>
+                    <td colSpan={5} className="px-5 pt-6 pb-2 text-[11px] uppercase tracking-wide text-slate-700">Income</td>
+                  </tr>
+                  <tr>
+                    <td colSpan={5} className="h-[1px] bg-[var(--color-teal-100)]" />
+                  </tr>
+                  {lineNames("incomeLines").map((name) => (
+                    <tr key={name} className="border-t border-slate-100 bg-[var(--color-teal-50)]/60">
+                      <td className="px-5 py-2 max-w-[320px] pr-10 align-top">
+                        <div className="whitespace-normal break-words leading-tight">{name}</div>
+                      </td>
+                      <td className="px-5 py-2 text-right text-[var(--color-teal-700)] font-medium">{formatPercentOneDecimal(getPercent("weekly", "incomeLines", name))}</td>
+                      {PERIODS.map((p) => (
+                        <td key={p} className="px-5 py-2 text-right tabular-nums">{formatCurrency(getAmount(p, "incomeLines", name))}</td>
+                      ))}
+                    </tr>
+                  ))}
+                  <tr className="border-t border-[var(--color-teal-100)] bg-[var(--color-teal-50)]">
+                    <td className="px-5 py-2 font-medium">Total Income</td>
+                    <td className="px-5 py-2" />
+                    <td className="px-5 py-2 text-right font-medium tabular-nums">{formatCurrency(weekly.totalIncome)}</td>
+                    <td className="px-5 py-2 text-right font-medium tabular-nums">{formatCurrency(monthly.totalIncome)}</td>
+                    <td className="px-5 py-2 text-right font-medium tabular-nums">{formatCurrency(annual.totalIncome)}</td>
+                  </tr>
+
+                  {/* Direct Expenses */}
+                  <tr>
+                    <td colSpan={5} className="px-5 pt-8 pb-2 text-[11px] uppercase tracking-wide text-slate-700">Direct expenses</td>
+                  </tr>
+                  <tr>
+                    <td colSpan={5} className="h-[1px] bg-[var(--color-teal-100)]" />
+                  </tr>
+                  {lineNames("directExpenses").map((name) => (
+                    <tr key={name} className="border-t border-slate-100 bg-white">
+                      <td className="px-5 py-2 max-w-[320px] pr-10 align-top">
+                        <div className="whitespace-normal break-words leading-tight">{name}</div>
+                      </td>
+                      <td className="px-5 py-2 text-right text-[var(--color-teal-700)] font-medium">{formatPercentOneDecimal(getPercent("weekly", "directExpenses", name))}</td>
+                      {PERIODS.map((p) => (
+                        <td key={p} className="px-5 py-2 text-right tabular-nums">{formatCurrency(getAmount(p, "directExpenses", name))}</td>
+                      ))}
+                    </tr>
+                  ))}
+                  <tr className="border-t bg-[var(--color-teal-50)]">
+                    <td className="px-5 py-2 font-medium">Total Direct Expenses</td>
+                    <td className="px-5 py-2" />
+                    <td className="px-5 py-2 text-right font-medium tabular-nums">{formatCurrency(weekly.totals.directExpenses)}</td>
+                    <td className="px-5 py-2 text-right font-medium tabular-nums">{formatCurrency(monthly.totals.directExpenses)}</td>
+                    <td className="px-5 py-2 text-right font-medium tabular-nums">{formatCurrency(annual.totals.directExpenses)}</td>
+                  </tr>
+
+                  {/* Indirect Expenses */}
+                  <tr>
+                    <td colSpan={5} className="px-5 pt-8 pb-2 text-[11px] uppercase tracking-wide text-slate-700">Indirect expenses</td>
+                  </tr>
+                  <tr>
+                    <td colSpan={5} className="h-[1px] bg-[var(--color-teal-100)]" />
+                  </tr>
+                  {lineNames("indirectExpenses").map((name) => (
+                    <tr key={name} className="border-t border-slate-100 bg-white">
+                      <td className="px-5 py-2 max-w-[320px] pr-10 align-top">
+                        <div className="whitespace-normal break-words leading-tight">{name}</div>
+                      </td>
+                      <td className="px-5 py-2 text-right text-[var(--color-teal-700)] font-medium">{formatPercentOneDecimal(getPercent("weekly", "indirectExpenses", name))}</td>
+                      {PERIODS.map((p) => (
+                        <td key={p} className="px-5 py-2 text-right tabular-nums">{formatCurrency(getAmount(p, "indirectExpenses", name))}</td>
+                      ))}
+                    </tr>
+                  ))}
+                  <tr className="border-t bg-[var(--color-teal-50)]">
+                    <td className="px-5 py-2 font-medium">Total Indirect Expenses</td>
+                    <td className="px-5 py-2" />
+                    <td className="px-5 py-2 text-right font-medium tabular-nums">{formatCurrency(weekly.totals.indirectExpenses)}</td>
+                    <td className="px-5 py-2 text-right font-medium tabular-nums">{formatCurrency(monthly.totals.indirectExpenses)}</td>
+                    <td className="px-5 py-2 text-right font-medium tabular-nums">{formatCurrency(annual.totals.indirectExpenses)}</td>
+                  </tr>
+
+                  {/* Savings Bonus */}
+                  <tr className="border-t-2 border-[var(--color-teal-100)] bg-[var(--color-teal-50)]">
+                    <td className="px-5 py-3 font-semibold">Savings Bonus</td>
+                    <td className="px-5 py-3" />
+                    <td className="px-5 py-3 text-right font-semibold tabular-nums">{formatCurrency(weekly.totals.netIncome)}</td>
+                    <td className="px-5 py-3 text-right font-semibold tabular-nums">{formatCurrency(monthly.totals.netIncome)}</td>
+                    <td className="px-5 py-3 text-right font-semibold tabular-nums">{formatCurrency(annual.totals.netIncome)}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {/* Mobile list (single period) */}
+          <div className="lg:hidden">
+            <div className="p-5 text-sm">
+              <div className="bg-[var(--color-teal-50)] rounded-lg p-3">
+                <div className="text-xs uppercase tracking-wide text-slate-700 mb-2">Income</div>
+                <div className="divide-y divide-[var(--color-teal-100)]">
+                  {lineNames("incomeLines").map((name) => (
+                    <div key={name} className="flex items-start justify-between py-2 gap-4">
+                      <div className="flex items-start gap-2 min-w-0">
+                        <span className="shrink-0 inline-flex items-center justify-center h-5 px-1.5 rounded bg-[var(--color-teal-50)] text-[var(--color-teal-700)] text-[11px] font-medium">
+                          {formatPercentOneDecimal(getPercent(mobilePeriod as PeriodKey, "incomeLines", name))}
+                        </span>
+                        <div className="whitespace-normal break-words leading-tight">{name}</div>
+                      </div>
+                      <div className="text-right tabular-nums">
+                        <div>{formatCurrency(getAmount(mobilePeriod as PeriodKey, "incomeLines", name))}</div>
+                      </div>
+                    </div>
+                  ))}
+                  <div className="flex items-center justify-between py-2 font-medium bg-white px-2 rounded">
+                    <div>Total Income</div>
+                    <div className="tabular-nums">{formatCurrency(periodResults[mobilePeriod as PeriodKey].totalIncome)}</div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-6 pt-4 border-t border-[var(--color-teal-100)]">
+                <div className="bg-white rounded-lg p-3">
+                  <div className="text-xs uppercase tracking-wide text-slate-700 mb-2">Direct expenses</div>
+                  <div className="divide-y divide-[var(--color-teal-100)]">
+                    {lineNames("directExpenses").map((name) => (
+                      <div key={name} className="flex items-start justify-between py-2 gap-4">
+                        <div className="flex items-start gap-2 min-w-0">
+                          <span className="shrink-0 inline-flex items-center justify-center h-5 px-1.5 rounded bg-[var(--color-teal-50)] text-[var(--color-teal-700)] text-[11px] font-medium">
+                            {formatPercentOneDecimal(getPercent(mobilePeriod as PeriodKey, "directExpenses", name))}
+                          </span>
+                          <div className="whitespace-normal break-words leading-tight">{name}</div>
+                        </div>
+                        <div className="text-right tabular-nums">
+                          <div>{formatCurrency(getAmount(mobilePeriod as PeriodKey, "directExpenses", name))}</div>
+                        </div>
+                      </div>
+                    ))}
+                    <div className="flex items-center justify-between py-2 font-medium bg-[var(--color-teal-50)] px-2 rounded">
+                      <div>Total Direct Expenses</div>
+                      <div className="tabular-nums">{formatCurrency(periodResults[mobilePeriod as PeriodKey].totals.directExpenses)}</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-6 pt-4 border-t border-[var(--color-teal-100)]">
+                <div className="bg-white rounded-lg p-3">
+                  <div className="text-xs uppercase tracking-wide text-slate-700 mb-2">Indirect expenses</div>
+                  <div className="divide-y divide-[var(--color-teal-100)]">
+                    {lineNames("indirectExpenses").map((name) => (
+                      <div key={name} className="flex items-start justify-between py-2 gap-4">
+                        <div className="flex items-start gap-2 min-w-0">
+                          <span className="shrink-0 inline-flex items-center justify-center h-5 px-1.5 rounded bg-[var(--color-teal-50)] text-[var(--color-teal-700)] text-[11px] font-medium">
+                            {formatPercentOneDecimal(getPercent(mobilePeriod as PeriodKey, "indirectExpenses", name))}
+                          </span>
+                          <div className="whitespace-normal break-words leading-tight">{name}</div>
+                        </div>
+                        <div className="text-right tabular-nums">
+                          <div>{formatCurrency(getAmount(mobilePeriod as PeriodKey, "indirectExpenses", name))}</div>
+                        </div>
+                      </div>
+                    ))}
+                    <div className="flex items-center justify-between py-2 font-medium bg-[var(--color-teal-50)] px-2 rounded">
+                      <div>Total Indirect Expenses</div>
+                      <div className="tabular-nums">{formatCurrency(periodResults[mobilePeriod as PeriodKey].totals.indirectExpenses)}</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-6 pt-4 border-[var(--color-teal-100)] flex items-center justify-between font-semibold">
+                <div>Savings Bonus</div>
+                <div className="tabular-nums">{formatCurrency(periodResults[mobilePeriod as PeriodKey].totals.netIncome)}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

@@ -1,0 +1,28 @@
+{
+  "income": [
+    {"category": "Income", "line_item": "Services", "percent_of_income": 0.77},
+    {"category": "Income", "line_item": "Tips", "percent_of_income": 0.18},
+    {"category": "Income", "line_item": "Retail", "percent_of_income": 0.05}
+  ],
+  "direct_expenses": [
+    {"category": "Direct Expenses", "line_item": "Stylist Draw", "percent_of_income": 0.36},
+    {"category": "Direct Expenses", "line_item": "Savings for Retirement/Rainy Day Fund", "percent_of_income": 0.05},
+    {"category": "Direct Expenses", "line_item": "Vacation Fund", "percent_of_income": 0.01},
+    {"category": "Direct Expenses", "line_item": "Tax Reserve", "percent_of_income": 0.20},
+    {"category": "Direct Expenses", "line_item": "Professional Supplies - Backbar", "percent_of_income": 0.15},
+    {"category": "Direct Expenses", "line_item": "Retail Cost of Goods Sold", "percent_of_income": 0.025}
+  ],
+  "indirect_expenses": [
+    {"category": "Indirect Expenses", "line_item": "Advertising", "percent_of_income": 0.01},
+    {"category": "Indirect Expenses", "line_item": "Bank Charges & Merchant Fees", "percent_of_income": 0.03},
+    {"category": "Indirect Expenses", "line_item": "Education/Training", "percent_of_income": 0.02},
+    {"category": "Indirect Expenses", "line_item": "Hospitality/Licensing/Vibe Check", "percent_of_income": 0.01},
+    {"category": "Indirect Expenses", "line_item": "Insurance", "percent_of_income": 0.005},
+    {"category": "Indirect Expenses", "line_item": "Professional Fees (Accounting, Legal)", "percent_of_income": 0.02},
+    {"category": "Indirect Expenses", "line_item": "Rent Expense", "percent_of_income": 0.09},
+    {"category": "Indirect Expenses", "line_item": "Supplies / Equipment", "percent_of_income": 0.01},
+    {"category": "Indirect Expenses", "line_item": "Telephone", "percent_of_income": 0.01}
+  ]
+}
+
+
