@@ -4,7 +4,7 @@ import React from "react";
 
 export function Card({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <div className="rounded-xl border border-black/10 dark:border-white/15 bg-white dark:bg-zinc-900 shadow-sm p-5">
+    <div className="rounded-xl border border-black/10 bg-white shadow-sm p-5">
       <h3 className="text-lg font-semibold mb-3">{title}</h3>
       {children}
     </div>
@@ -14,7 +14,7 @@ export function Card({ title, children }: { title: string; children: React.React
 export function Field({ label, suffix, children }: { label: string; suffix?: string; children: React.ReactNode }) {
   return (
     <label className="block mb-3">
-      <div className="text-sm text-zinc-600 dark:text-zinc-400 mb-1">{label}</div>
+      <div className="text-sm text-zinc-600 mb-1">{label}</div>
       <div className="relative">
         {children}
         {suffix ? (
@@ -39,7 +39,7 @@ export function Input({ value, onChange, prefix, type = "number", min = 0, step 
         <span className="absolute inset-y-0 left-3 flex items-center text-zinc-500">{prefix}</span>
       ) : null}
       <input
-        className="w-full rounded-md border border-black/10 dark:border-white/15 bg-white dark:bg-zinc-800 px-3 py-2 pl-7 focus:outline-none focus:ring-2 focus:ring-[--color-brand-teal]"
+        className="w-full rounded-md border border-black/10 bg-white text-zinc-900 placeholder-zinc-500 px-3 py-2 pl-7 focus:outline-none focus:ring-2 focus:ring-[--color-brand-teal]"
         type={type}
         inputMode="decimal"
         min={min}
@@ -53,7 +53,7 @@ export function Input({ value, onChange, prefix, type = "number", min = 0, step 
 
 export function Tabs({ value, onChange, options }: { value: string; onChange: (v: string) => void; options: { value: string; label: string }[] }) {
   return (
-    <div className="inline-flex items-center gap-1 rounded-full border border-black/10 dark:border-white/15 bg-[var(--color-teal-50)] dark:bg-zinc-800 p-1">
+    <div className="inline-flex items-center gap-1 rounded-full border border-black/10 bg-[var(--color-teal-50)] p-1">
       {options.map((opt) => {
         const active = value === opt.value;
         return (
@@ -84,13 +84,13 @@ export function Table({
   footer?: { label: string; value: number };
 }) {
   return (
-    <div className="overflow-hidden rounded-xl border border-black/10 dark:border-white/15">
+    <div className="overflow-hidden rounded-xl border border-black/10">
       {header ? (
-        <div className="px-4 py-2 bg-[var(--color-teal-50)] dark:bg-zinc-800 border-b border-black/10 dark:border-white/10 text-sm font-medium">
+        <div className="px-4 py-2 bg-[var(--color-teal-50)] border-b border-black/10 text-sm font-medium">
           {header}
         </div>
       ) : null}
-      <div className="divide-y divide-black/10 dark:divide-white/10">
+      <div className="divide-y divide-black/10">
         {rows.map((row) => (
           <div key={row.name} className="flex items-center justify-between px-4 py-2">
             <div className="truncate mr-4">{row.name}</div>
@@ -102,7 +102,7 @@ export function Table({
         ))}
       </div>
       {footer ? (
-        <div className="px-4 py-2 bg-[var(--color-teal-50)] dark:bg-zinc-800 border-t border-black/10 dark:border-white/10 flex items-center justify-between font-medium">
+        <div className="px-4 py-2 bg-[var(--color-teal-50)] border-t border-black/10 flex items-center justify-between font-medium">
           <div>{footer.label}</div>
           <div className="tabular-nums">${footer.value.toLocaleString()}</div>
         </div>
@@ -112,7 +112,7 @@ export function Table({
 }
 
 export function Select({ value, onChange, options, className }: { value: string; onChange: (v: string) => void; options: { value: string; label: string }[]; className?: string }) {
-  const base = "rounded-md border border-black/10 dark:border-white/15 bg-white dark:bg-zinc-800 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[--color-brand-teal] text-sm";
+  const base = "rounded-md border border-black/10 bg-white text-zinc-900 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[--color-brand-teal] text-sm";
   return (
     <select
       className={className ? `${base} ${className}` : base}

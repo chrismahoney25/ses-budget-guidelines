@@ -14,6 +14,7 @@ html, body, #__next { height: 100%; }
 
 body {
   @apply bg-white text-slate-900 antialiased overflow-x-hidden overflow-y-auto;
+  color-scheme: light;
 }
 
 /* Minimal app background helper - teal-only */
