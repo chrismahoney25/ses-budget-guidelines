@@ -33,6 +33,7 @@ export function Input({ value, onChange, prefix, type = "number", min = 0, step 
   min?: number;
   step?: string | number;
 }) {
+  const displayValue = value === 0 ? "" : value;
   return (
     <div className="relative">
       {prefix ? (
@@ -44,7 +45,7 @@ export function Input({ value, onChange, prefix, type = "number", min = 0, step 
         inputMode="decimal"
         min={min}
         step={step}
-        value={value}
+        value={displayValue}
         onChange={(e) => onChange(Number(e.target.value) || 0)}
       />
     </div>
