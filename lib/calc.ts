@@ -38,6 +38,10 @@ export function buildFromIncomeInputs(data: BudgetData, inputs: IncomeInputs): C
       baseAmount = inputs.retail;
       baseLabel = "Retail";
       amount = baseAmount * 0.5; // 50% of Retail
+    } else if (line.line_item === "Tax Reserve") {
+      baseAmount = servicesAndTips + inputs.retail * 0.5; // Services + Tips + 50% of Retail
+      baseLabel = "Services + Tips + 50% of Retail";
+      amount = baseAmount * line.percent_of_income;
     } else {
       // All other direct expenses are based on Services + Tips only
       amount = baseAmount * line.percent_of_income;
@@ -115,6 +119,10 @@ export function buildFromRent(data: BudgetData, monthlyRentAmount: number): Calc
       baseAmount = retailAmount;
       baseLabel = "Retail";
       amount = baseAmount * 0.5; // 50% of Retail
+    } else if (line.line_item === "Tax Reserve") {
+      baseAmount = servicesAndTips + retailAmount * 0.5; // Services + Tips + 50% of Retail
+      baseLabel = "Services + Tips + 50% of Retail";
+      amount = baseAmount * line.percent_of_income;
     } else {
       // All other direct expenses are based on Services + Tips only
       amount = baseAmount * line.percent_of_income;
