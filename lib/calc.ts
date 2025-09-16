@@ -10,6 +10,7 @@ export function sum(values: number[]): number {
 
 export function buildFromIncomeInputs(data: BudgetData, inputs: IncomeInputs): CalculatedBudget {
   const totalIncome = inputs.services + inputs.tips + inputs.retail;
+  const servicesAndTips = inputs.services + inputs.tips;
 
   const incomeByName: Record<string, number> = {
     Services: inputs.services,
@@ -26,25 +27,36 @@ export function buildFromIncomeInputs(data: BudgetData, inputs: IncomeInputs): C
   // Direct expenses with overrides based on source amounts for certain lines
   const directExpenses = data.direct_expenses.map((line) => {
     let amount = 0;
+    let baseAmount = servicesAndTips;
+    let baseLabel = "Services + Tips";
 
     if (line.line_item === "Professional Supplies - Backbar") {
-      amount = inputs.services * 0.15; // 15% of Services
+      baseAmount = inputs.services;
+      baseLabel = "Services";
+      amount = baseAmount * 0.15; // 15% of Services
     } else if (line.line_item === "Retail Cost of Goods Sold") {
-      amount = inputs.retail * 0.5; // 50% of Retail
+      baseAmount = inputs.retail;
+      baseLabel = "Retail";
+      amount = baseAmount * 0.5; // 50% of Retail
     } else {
-      amount = totalIncome * line.percent_of_income;
+      // All other direct expenses are based on Services + Tips only
+      amount = baseAmount * line.percent_of_income;
     }
 
     const rounded = roundCurrency(amount);
-    const percentOfIncome = totalIncome > 0 ? rounded / totalIncome : 0;
-    return { name: line.line_item, amount: rounded, percent: percentOfIncome };
+    const percentOfBase = baseAmount > 0 ? rounded / baseAmount : 0;
+    return { name: line.line_item, amount: rounded, percent: percentOfBase, baseLabel };
   });
 
   const indirectExpenses = data.indirect_expenses.map((line) => {
-    const amount = totalIncome * line.percent_of_income;
+    // Indirect expenses are based on Services + Tips, except Bank Charges & Merchant Fees which are based on Total Income (Services + Tips + Retail)
+    const isBankFees = line.line_item === "Bank Charges & Merchant Fees";
+    const baseAmount = isBankFees ? totalIncome : servicesAndTips;
+    const baseLabel = isBankFees ? "Services + Tips + Retail" : "Services + Tips";
+    const amount = baseAmount * line.percent_of_income;
     const rounded = roundCurrency(amount);
-    const percentOfIncome = totalIncome > 0 ? rounded / totalIncome : 0;
-    return { name: line.line_item, amount: rounded, percent: percentOfIncome };
+    const percentOfBase = baseAmount > 0 ? rounded / baseAmount : 0;
+    return { name: line.line_item, amount: rounded, percent: percentOfBase, baseLabel };
   });
 
   const totalsDirect = sum(directExpenses.map((x) => x.amount));
@@ -81,33 +93,47 @@ export function buildFromRent(data: BudgetData, monthlyRentAmount: number): Calc
     return { name: line.line_item, amount: roundCurrency(amount), percent: line.percent_of_income };
   });
 
-  // Determine services and retail amounts from income distribution
+  // Determine services, tips, and retail amounts from income distribution
   const servicesPercent = data.income.find((l) => l.line_item === "Services")?.percent_of_income ?? 0;
+  const tipsPercent = data.income.find((l) => l.line_item === "Tips")?.percent_of_income ?? 0;
   const retailPercent = data.income.find((l) => l.line_item === "Retail")?.percent_of_income ?? 0;
   const servicesAmount = totalIncome * servicesPercent;
+  const tipsAmount = totalIncome * tipsPercent;
+  const servicesAndTips = servicesAmount + tipsAmount;
   const retailAmount = totalIncome * retailPercent;
 
   const directExpenses = data.direct_expenses.map((line) => {
     let amount = 0;
+    let baseAmount = servicesAndTips;
+    let baseLabel = "Services + Tips";
 
     if (line.line_item === "Professional Supplies - Backbar") {
-      amount = servicesAmount * 0.15; // 15% of Services
+      baseAmount = servicesAmount;
+      baseLabel = "Services";
+      amount = baseAmount * 0.15; // 15% of Services
     } else if (line.line_item === "Retail Cost of Goods Sold") {
-      amount = retailAmount * 0.5; // 50% of Retail
+      baseAmount = retailAmount;
+      baseLabel = "Retail";
+      amount = baseAmount * 0.5; // 50% of Retail
     } else {
-      amount = totalIncome * line.percent_of_income;
+      // All other direct expenses are based on Services + Tips only
+      amount = baseAmount * line.percent_of_income;
     }
 
     const rounded = roundCurrency(amount);
-    const percentOfIncome = totalIncome > 0 ? rounded / totalIncome : 0;
-    return { name: line.line_item, amount: rounded, percent: percentOfIncome };
+    const percentOfBase = baseAmount > 0 ? rounded / baseAmount : 0;
+    return { name: line.line_item, amount: rounded, percent: percentOfBase, baseLabel };
   });
 
   const indirectExpenses = data.indirect_expenses.map((line) => {
-    const amount = totalIncome * line.percent_of_income;
+    // Indirect expenses are based on Services + Tips, except Bank Charges & Merchant Fees which are based on Total Income (Services + Tips + Retail)
+    const isBankFees = line.line_item === "Bank Charges & Merchant Fees";
+    const baseAmount = isBankFees ? totalIncome : servicesAndTips;
+    const baseLabel = isBankFees ? "Services + Tips + Retail" : "Services + Tips";
+    const amount = baseAmount * line.percent_of_income;
     const rounded = roundCurrency(amount);
-    const percentOfIncome = totalIncome > 0 ? rounded / totalIncome : 0;
-    return { name: line.line_item, amount: rounded, percent: percentOfIncome };
+    const percentOfBase = baseAmount > 0 ? rounded / baseAmount : 0;
+    return { name: line.line_item, amount: rounded, percent: percentOfBase, baseLabel };
   });
 
   const totalsDirect = sum(directExpenses.map((x) => x.amount));

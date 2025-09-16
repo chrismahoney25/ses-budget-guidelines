@@ -56,7 +56,7 @@ export default function Home() {
   return (
     <div className="min-h-screen">
       <AppHeader />
-      <div className="pt-16 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="pt-16 pb-28 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Inputs card with mode toggle inside */}
         <div className="rounded-2xl border border-slate-200/60 bg-white shadow p-5">
           <div className="flex items-center justify-between mb-6">
@@ -118,7 +118,7 @@ export default function Home() {
                 <thead className="bg-[var(--color-teal-50)] text-sm">
                   <tr>
                     <th className="text-left px-5 py-3 font-medium text-slate-700">Category</th>
-                    <th className="text-right px-5 py-3 font-medium text-slate-700">% of income</th>
+                    <th className="text-right px-5 py-3 font-medium text-slate-700"></th>
                     {PERIODS.map((p) => (
                       <th key={p} className="text-right px-5 py-3 font-medium text-slate-700 capitalize">{p}</th>
                     ))}
@@ -158,17 +158,23 @@ export default function Home() {
                   <tr>
                     <td colSpan={5} className="h-[1px] bg-[var(--color-teal-100)]" />
                   </tr>
-                  {lineNames("directExpenses").map((name) => (
-                    <tr key={name} className="border-t border-slate-100 bg-white">
-                      <td className="px-5 py-2 max-w-[320px] pr-10 align-top">
-                        <div className="whitespace-normal break-words leading-tight">{name}</div>
-                      </td>
-                      <td className="px-5 py-2 text-right text-[var(--color-teal-700)] font-medium">{formatPercentOneDecimal(getPercent("weekly", "directExpenses", name))}</td>
-                      {PERIODS.map((p) => (
-                        <td key={p} className="px-5 py-2 text-right tabular-nums">{formatCurrency(getAmount(p, "directExpenses", name))}</td>
-                      ))}
-                    </tr>
-                  ))}
+                  {lineNames("directExpenses").map((name) => {
+                    const baseLabel = weekly.directExpenses.find((l) => l.name === name)?.baseLabel ?? "";
+                    return (
+                      <tr key={name} className="border-t border-slate-100 bg-white">
+                        <td className="px-5 py-2 max-w-[320px] pr-10 align-top">
+                          <div className="whitespace-normal break-words leading-tight">{name}</div>
+                          {baseLabel ? (
+                            <div className="text-[11px] text-slate-500 mt-0.5">% Based on: {baseLabel}</div>
+                          ) : null}
+                        </td>
+                        <td className="px-5 py-2 text-right text-[var(--color-teal-700)] font-medium">{formatPercentOneDecimal(getPercent("weekly", "directExpenses", name))}</td>
+                        {PERIODS.map((p) => (
+                          <td key={p} className="px-5 py-2 text-right tabular-nums">{formatCurrency(getAmount(p, "directExpenses", name))}</td>
+                        ))}
+                      </tr>
+                    );
+                  })}
                   <tr className="border-t bg-[var(--color-teal-50)]">
                     <td className="px-5 py-2 font-medium">Total Direct Expenses</td>
                     <td className="px-5 py-2" />
@@ -184,17 +190,23 @@ export default function Home() {
                   <tr>
                     <td colSpan={5} className="h-[1px] bg-[var(--color-teal-100)]" />
                   </tr>
-                  {lineNames("indirectExpenses").map((name) => (
-                    <tr key={name} className="border-t border-slate-100 bg-white">
-                      <td className="px-5 py-2 max-w-[320px] pr-10 align-top">
-                        <div className="whitespace-normal break-words leading-tight">{name}</div>
-                      </td>
-                      <td className="px-5 py-2 text-right text-[var(--color-teal-700)] font-medium">{formatPercentOneDecimal(getPercent("weekly", "indirectExpenses", name))}</td>
-                      {PERIODS.map((p) => (
-                        <td key={p} className="px-5 py-2 text-right tabular-nums">{formatCurrency(getAmount(p, "indirectExpenses", name))}</td>
-                      ))}
-                    </tr>
-                  ))}
+                  {lineNames("indirectExpenses").map((name) => {
+                    const baseLabel = weekly.indirectExpenses.find((l) => l.name === name)?.baseLabel ?? "";
+                    return (
+                      <tr key={name} className="border-t border-slate-100 bg-white">
+                        <td className="px-5 py-2 max-w-[320px] pr-10 align-top">
+                          <div className="whitespace-normal break-words leading-tight">{name}</div>
+                          {baseLabel ? (
+                            <div className="text-[11px] text-slate-500 mt-0.5">% Based on: {baseLabel}</div>
+                          ) : null}
+                        </td>
+                        <td className="px-5 py-2 text-right text-[var(--color-teal-700)] font-medium">{formatPercentOneDecimal(getPercent("weekly", "indirectExpenses", name))}</td>
+                        {PERIODS.map((p) => (
+                          <td key={p} className="px-5 py-2 text-right tabular-nums">{formatCurrency(getAmount(p, "indirectExpenses", name))}</td>
+                        ))}
+                      </tr>
+                    );
+                  })}
                   <tr className="border-t bg-[var(--color-teal-50)]">
                     <td className="px-5 py-2 font-medium">Total Indirect Expenses</td>
                     <td className="px-5 py-2" />
@@ -252,7 +264,12 @@ export default function Home() {
                           <span className="shrink-0 inline-flex items-center justify-center h-5 px-1.5 rounded bg-[var(--color-teal-50)] text-[var(--color-teal-700)] text-[11px] font-medium">
                             {formatPercentOneDecimal(getPercent(mobilePeriod as PeriodKey, "directExpenses", name))}
                           </span>
-                          <div className="whitespace-normal break-words leading-tight">{name}</div>
+                          <div className="whitespace-normal break-words leading-tight">
+                            {name}
+                            {(periodResults[mobilePeriod as PeriodKey].directExpenses.find((l) => l.name === name)?.baseLabel ?? "") ? (
+                              <div className="text-[11px] text-slate-500 mt-0.5">% Based on: {periodResults[mobilePeriod as PeriodKey].directExpenses.find((l) => l.name === name)?.baseLabel}</div>
+                            ) : null}
+                          </div>
                         </div>
                         <div className="text-right tabular-nums">
                           <div>{formatCurrency(getAmount(mobilePeriod as PeriodKey, "directExpenses", name))}</div>
@@ -277,7 +294,12 @@ export default function Home() {
                           <span className="shrink-0 inline-flex items-center justify-center h-5 px-1.5 rounded bg-[var(--color-teal-50)] text-[var(--color-teal-700)] text-[11px] font-medium">
                             {formatPercentOneDecimal(getPercent(mobilePeriod as PeriodKey, "indirectExpenses", name))}
                           </span>
-                          <div className="whitespace-normal break-words leading-tight">{name}</div>
+                          <div className="whitespace-normal break-words leading-tight">
+                            {name}
+                            {(periodResults[mobilePeriod as PeriodKey].indirectExpenses.find((l) => l.name === name)?.baseLabel ?? "") ? (
+                              <div className="text-[11px] text-slate-500 mt-0.5">% Based on: {periodResults[mobilePeriod as PeriodKey].indirectExpenses.find((l) => l.name === name)?.baseLabel}</div>
+                            ) : null}
+                          </div>
                         </div>
                         <div className="text-right tabular-nums">
                           <div>{formatCurrency(getAmount(mobilePeriod as PeriodKey, "indirectExpenses", name))}</div>
@@ -297,6 +319,27 @@ export default function Home() {
                 <div className="tabular-nums">{formatCurrency(periodResults[mobilePeriod as PeriodKey].totals.netIncome)}</div>
               </div>
             </div>
+          </div>
+        </div>
+      </div>
+      {/* Sticky Savings Bonus footer */}
+      <div className="fixed bottom-0 inset-x-0 z-50 border-t border-slate-200/60 bg-white/90 backdrop-blur">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex items-center justify-between">
+          <div>
+            <div className="text-xs uppercase tracking-wide text-slate-600">Savings Bonus</div>
+            <div className="text-lg font-semibold tabular-nums">{formatCurrency(periodResults[mobilePeriod as PeriodKey].totals.netIncome)}</div>
+          </div>
+          <div className="hidden lg:block">
+            <Select
+              className="h-9 px-3 py-1.5 text-sm rounded-lg border-slate-200"
+              value={mobilePeriod}
+              onChange={(v) => setMobilePeriod(v as Period)}
+              options={[
+                { value: "weekly", label: "Weekly" },
+                { value: "monthly", label: "Monthly" },
+                { value: "annual", label: "Annual" },
+              ]}
+            />
           </div>
         </div>
       </div>

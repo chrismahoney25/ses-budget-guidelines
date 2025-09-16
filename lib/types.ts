@@ -19,8 +19,8 @@ export type IncomeInputs = {
 export type CalculatedBudget = {
   totalIncome: number;
   incomeLines: Array<{ name: string; amount: number; percent: number }>;
-  directExpenses: Array<{ name: string; amount: number; percent: number }>;
-  indirectExpenses: Array<{ name: string; amount: number; percent: number }>;
+  directExpenses: Array<{ name: string; amount: number; percent: number; baseLabel: string }>;
+  indirectExpenses: Array<{ name: string; amount: number; percent: number; baseLabel: string }>;
   totals: {
     directExpenses: number;
     indirectExpenses: number;
